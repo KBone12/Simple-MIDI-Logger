@@ -1,5 +1,5 @@
 use clap::Parser;
-use midir::MidiInput;
+use midir::{MidiIO, MidiInput, MidiOutput};
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -17,10 +17,14 @@ type Result<T> = std::result::Result<T, AppError>;
 #[clap(version, about)]
 struct Arguments {
     /// Print available MIDI input ports
-    #[clap(short, long)]
-    list: bool,
+    #[clap(short, long = "list-input")]
+    list_input: bool,
 
-    /// Specify the MIDI input port by name or index (You can check it by executing this with `--list`
+    /// Print available MIDI output ports
+    #[clap(long = "list-output")]
+    list_output: bool,
+
+    /// Specify the MIDI input port by name or index (You can check it by executing this with `--list-input`
     /// option)
     ///
     /// If there is a name which is just a number, then the number means a port index (so you
@@ -29,14 +33,12 @@ struct Arguments {
     input: Option<String>,
 }
 
-fn print_midi_ports() -> Result<()> {
-    let midi_input = MidiInput::new("Simple MIDI Logger")?;
+fn print_midi_ports<Midi: MidiIO>(midi: &Midi) -> Result<()> {
     println!(
         "{}",
-        midi_input
-            .ports()
+        midi.ports()
             .iter()
-            .filter_map(|port| midi_input.port_name(port).ok())
+            .filter_map(|port| midi.port_name(port).ok())
             .enumerate()
             .map(|(index, port_name)| format!("{index}: {port_name}"))
             .collect::<Vec<_>>()
@@ -47,13 +49,20 @@ fn print_midi_ports() -> Result<()> {
 }
 
 fn main() -> Result<()> {
+    let midi_input = MidiInput::new("Simple MIDI Logger")?;
+    let midi_output = MidiOutput::new("Simple MIDI Logger")?;
+
     let args = Arguments::parse();
-    if args.list {
-        print_midi_ports()?;
+
+    // Print infomations and exit
+    if args.list_input {
+        print_midi_ports(&midi_input)?;
+        return Ok(());
+    } else if args.list_output {
+        print_midi_ports(&midi_output)?;
         return Ok(());
     }
 
-    let midi_input = MidiInput::new("Simple MIDI Logger")?;
     let midi_input_ports = midi_input.ports();
     let midi_input_port = if let Some(input) = args.input {
         if let Ok(port_index) = input.parse::<usize>() {
