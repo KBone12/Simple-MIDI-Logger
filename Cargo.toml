@@ -6,5 +6,16 @@ edition = "2021"
 description = "Printing MIDI messages from the selected MIDI input port to stdout."
 license = "MIT"
 
+[features]
+default = []
+jack = ["midir/jack"]
+
 [dependencies]
 clap = { version = "3.1.6", features = ["cargo", "derive"] }
+thiserror = "1.0.30"
+
+[target.'cfg(windows)'.dependencies]
+midir = { version = "0.7.0", features = ["winrt"] }
+
+[target.'cfg(unix)'.dependencies]
+midir = "0.7.0"
