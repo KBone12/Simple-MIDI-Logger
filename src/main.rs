@@ -26,6 +26,8 @@ fn print_midi_ports() -> Result<()> {
             .ports()
             .iter()
             .filter_map(|port| midi_input.port_name(port).ok())
+            .enumerate()
+            .map(|(index, port_name)| format!("{index}: {port_name}"))
             .collect::<Vec<_>>()
             .join("\n")
     );
