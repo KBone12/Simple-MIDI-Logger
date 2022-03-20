@@ -34,6 +34,25 @@ OPTIONS:
             Create a virtual MIDI output port with this name (for *nix only)
 ```
 
+### Example
+```
+/path/to/simple-midi-logger>$ ./simple-midi-logger -l
+0: Midi Through:Midi Through Port-0 14:0
+1: Oxygen Pro 61:Oxygen Pro 61 USB MIDI 24:0
+2: Oxygen Pro 61:Oxygen Pro 61 MIDI DIN 24:1
+3: Oxygen Pro 61:Oxygen Pro 61 Mackie/HUI 24:2
+4: Oxygen Pro 61:Oxygen Pro 61 Editor 24:3
+/path/to/simple-midi-logger>$ ./simple-midi-logger -i "Oxygen Pro 61:Oxygen Pro 61 USB MIDI 24:0"
+0x90,0x43,0x67
+0x90,0x3C,0x60
+0x90,0x40,0x64
+0x80,0x40,0x00
+0x80,0x43,0x00
+0x80,0x3C,0x00
+^C
+/path/to/simple-midi-logger>$
+```
+
 ### For Windows
 This app will be run on Windows 8+ because `winrt` feature in midir, which is the one of the dependencies, is enabled.
 
