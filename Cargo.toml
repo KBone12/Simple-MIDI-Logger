@@ -3,6 +3,8 @@ name = "simple-midi-logger"
 version = "0.0.0"
 authors = ["kbone <kbonehobby@gmail.com>"]
 edition = "2021"
+description = "Printing MIDI messages from the selected MIDI input port to stdout."
 license = "MIT"
 
 [dependencies]
+clap = { version = "3.1.6", features = ["cargo", "derive"] }

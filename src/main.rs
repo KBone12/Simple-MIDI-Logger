@@ -1,3 +1,13 @@
+use clap::Parser;
+
+#[derive(Parser)]
+#[clap(version, about)]
+struct Arguments {
+    /// Print available MIDI input ports
+    #[clap(short, long)]
+    list: bool,
+}
+
 fn main() {
-    println!("Hello, world!");
+    let _args = Arguments::parse();
 }
