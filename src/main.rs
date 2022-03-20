@@ -1,5 +1,5 @@
 use clap::Parser;
-use midir::{MidiIO, MidiInput, MidiOutput};
+use midir::{os::unix::VirtualOutput, MidiIO, MidiInput, MidiOutput};
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -7,8 +7,8 @@ pub enum AppError {
     #[error("Can't initialize MIDI")]
     MidiInitError(#[from] midir::InitError),
 
-    #[error("Can't connect to the MIDI port")]
-    MidiConnectError(#[from] midir::ConnectError<MidiInput>),
+    #[error("Can't connect to the MIDI input port")]
+    MidiInputConnectError(#[from] midir::ConnectError<MidiInput>),
 }
 
 type Result<T> = std::result::Result<T, AppError>;
@@ -31,6 +31,19 @@ struct Arguments {
     /// can't specifity the port by name).
     #[clap(short, long)]
     input: Option<String>,
+
+    /// Specify the MIDI output port (to through the received messages) by name or index (You can check it by executing this with `--list-output`
+    /// option)
+    ///
+    /// If there is a name which is just a number, then the number means a port index (so you
+    /// can't specifity the port by name).
+    #[clap(short, long)]
+    output: Option<String>,
+
+    #[cfg(unix)]
+    /// Create a virtual MIDI output port with this name
+    #[clap(long = "virtual-output")]
+    virtual_output: Option<String>,
 }
 
 fn print_midi_ports<Midi: MidiIO>(midi: &Midi) -> Result<()> {
@@ -78,10 +91,43 @@ fn main() -> Result<()> {
             .get(0)
             .expect("There is no MIDI input port")
     };
+    let midi_output_ports = midi_output.ports();
+    let mut midi_output_connection = args
+        .output
+        .map(|output| {
+            if let Ok(port_index) = output.parse::<usize>() {
+                midi_output_ports.get(port_index)
+            } else {
+                midi_output_ports
+                    .iter()
+                    .find(|port| midi_output.port_name(port).as_ref() == Ok(&output))
+            }
+            .expect(format!("No such MIDI output port ({})", output).as_str())
+        })
+        .map(|port| {
+            midi_output
+                .connect(port, "")
+                .expect("Can't connect to the MIDI output port")
+        })
+        .or({
+            #[cfg(unix)]
+            {
+                args.virtual_output.map(|port_name| {
+                    MidiOutput::new("Simple MIDI Logger for virtual output")
+                        .expect("Can't initialize MIDI instance for virtual output")
+                        .create_virtual(port_name.as_str())
+                        .expect("Can't create a virtual MIDI output port")
+                })
+            }
+            #[cfg(not(unix))]
+            {
+                None
+            }
+        });
     let _midi_input_connection = midi_input.connect(
         midi_input_port,
         "Simple MIDI Logger",
-        |_timestamp, midi_message, _data| {
+        move |_timestamp, midi_message, _data| {
             println!(
                 "{}",
                 midi_message
@@ -90,6 +136,11 @@ fn main() -> Result<()> {
                     .collect::<Vec<_>>()
                     .join(",")
             );
+            if let Some(connection) = midi_output_connection.as_mut() {
+                if connection.send(midi_message).is_err() {
+                    midi_output_connection.take();
+                }
+            }
         },
         (),
     )?;
