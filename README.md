@@ -3,7 +3,7 @@ This app prints MIDI messages from the selected MIDI input port to stdout. Each 
 
 ## Usage
 ```
-simple-midi-logger 0.2.0
+simple-midi-logger 0.3.0
 Printing MIDI messages from the selected MIDI input port to stdout.
 
 USAGE:
