@@ -9,13 +9,9 @@ license = "MIT"
 [features]
 default = []
 jack = ["midir/jack"]
+winrt = ["midir/winrt"]
 
 [dependencies]
 clap = { version = "3.1.6", features = ["cargo", "derive"] }
+midir = { git = "https://github.com/Boddlnagg/midir", rev = "c6aa24867aedee1e02284c5bb6062648f594632d" }
 thiserror = "1.0.30"
-
-[target.'cfg(windows)'.dependencies]
-midir = { version = "0.7.0", features = ["winrt"] }
-
-[target.'cfg(unix)'.dependencies]
-midir = "0.7.0"
