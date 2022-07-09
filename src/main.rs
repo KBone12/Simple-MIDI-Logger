@@ -1,6 +1,9 @@
 use clap::Parser;
-use midir::{os::unix::VirtualOutput, MidiIO, MidiInput, MidiOutput};
+use midir::{MidiIO, MidiInput, MidiOutput};
 use thiserror::Error;
+
+#[cfg(unix)]
+use midir::os::unix::VirtualOutput;
 
 #[derive(Debug, Error)]
 pub enum AppError {
